@@ -11,9 +11,10 @@ app.get("/", function(req, res){
 	res.render("index.ejs");
 });
 
-app.io.route('ready', function(req){
+app.io.route('ready', function(req) {
 	req.io.join(req.data.chat_room);
 	req.io.join(req.data.signal_room);
+	req.io.join(req.data.files_room);
 	app.io.room(req.data).broadcast('announce', {
 		message: 'New client in the ' + req.data + ' room.'
 	})
@@ -32,6 +33,13 @@ app.io.route('signal', function(req) {
         type: req.data.type,
 		message: req.data.message
     });
+})
+
+app.io.route('files', function(req) {
+	req.io.room(req.data.room).broadcast('files', {
+		filename: req.data.filename,
+		filesize: req.data.filesize
+	});
 })
 
 
