@@ -8,6 +8,14 @@
 	<link href="https://fonts.googleapis.com/css?family=Josefin+Sans:400,700" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="styles.css">
 	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+
+	<!-- Font Awesome -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- Bootstrap core CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+<!-- Material Design Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/css/mdb.min.css" rel="stylesheet">
+
 </head>
 <body>
 
@@ -28,30 +36,46 @@
                     <h1><span>WebShare - Pure JavaScript <br> Peer to Peer Filesharing</span></h1>
                     </div>
 
-	<div>
-		<video id="myVideoTag" autoplay></video>
-		<video id="theirVideoTag" autoplay></video>
-	</div>
-	<div>
+
+
+
+	<div class="row">
+    <div class="col-sm-8" style="text-align: center;">
+	<div style="margin: auto;">
 		<input type="file" id="sendFile"/><br/>
 		<progress id="fileProgress" value=“1” max="100"></progress>
 		<a id="receivedFileLink"></a>
-		<hr>
-	</div>
+	</div> 
 
-<form>
-  <div class="row">
-    <div class="col">
+<!-- 	<div>
+		<video id="myVideoTag" autoplay></video>
+		<video id="theirVideoTag" autoplay></video>
+	</div>   -->
+
+
+
+</div>
+    <div class="col-sm-4">
+    	<header>Text Chat</header>
+<form id="textChat">
     <input type="text" class="form-control" id="myName" placeholder="Name">
-    </div>
-    <div class="col">
     <input type="text" class="form-control" id="myMessage" placeholder="message">
-    </div>
-    <div class="col">
 	  <button id="sendMessage" type="submit" class="btn btn-primary">send</button>
-    </div>
-  </div>
-</form>
+</form>    
+<div id="chatArea">Message Output:</br></div>
+</div>
+</div>
+        
+        <div class="well">
+  	File Status:
+          <div id="messageHolder" class="message-holder">
+			<div id="messageInName" class="message-in"></div>
+			<div id="messageOutName" class="message-out"></div>
+          </div>
+        </div>
+
+
+
 
 
 
@@ -59,12 +83,21 @@
 		<!-- <label>Your Name</label><input id="myName" type="text"/> -->
 		<!-- <label>Message</label><input id="myMessage" type="text"/> -->
 		<!-- <input id="sendMessage" type="submit"/> -->
-		<div id="chatArea">Message Output:</br></div>
-		<div id="signalingArea">Signaling Messages:<br></div>
+		<div id="chatArea"></br></div>
+		<div id="signalingArea"><br></div>
 	<!-- </div> -->
 
-	<p>If you're interested in playing with WebShare, you can try it out here, and <a href="https://github.com/vijay-uppunuru/WebRTC-CodeAlong">find the source code here.</a></p>
+
 	</div>
+
+                      
+<!--Footer-->
+<footer class="page-footer font-small blue py-3 mt-2">
+	<p style="text-align: center;">If you're interested in playing with WebShare, you can try it out here, and <a href="https://github.com/vijay-uppunuru/WebRTC-CodeAlong"><u>find the source code here.</u></a></p>
+
+</footer>
+<!--/.Footer-->
+              
 
 
 	<script type="text/javascript">
@@ -80,6 +113,7 @@
 		var sendFile = document.querySelector("input#sendFile");
 		var fileProgress = document.querySelector("progress#fileProgress");
 		var downloadLink = document.querySelector('a#receivedFileLink');
+
 		var ROOM = "chat";
 		var FILES_ROOM = "files";
 		var SIGNAL_ROOM = "signal_room";
@@ -94,11 +128,15 @@
 			ordered: false, //no guaranteed delivery, unreliable but faster 
 			maxRetransmitTime: 1000, //milliseconds
 		};
+
 		var dataChannel;
+
+		var messageHolder = document.querySelector("#messageHolder");
 		var receivedFileName;
 		var receivedFileSize;
 		var fileBuffer = [];
 		var fileSize = 0;
+		var fileTransferring = false;
 
 
 
@@ -110,7 +148,7 @@
 		io.emit('signal',{"type":"user_here", "message":"Are you ready for a call?", "room":SIGNAL_ROOM});
 
 		io.on('signaling_message', function(data) {
-			displaySignalMessage("Signal received: " + data.type);
+			console.log("Signal received: " + data.type);
 			//Setup the RTC Peer Connection object
 			if (!rtcPeerConn)
 				startSignaling();
@@ -134,11 +172,13 @@
 		io.on('files', function(data) {
 			receivedFileName = data.filename;
 			receivedFileSize = data.filesize;
-			displaySignalMessage("websockets says the file on it's way is " + receivedFileName + " (" + receivedFileSize + ")");
+			console.log("websockets says the file on it's way is " + receivedFileName + " (" + receivedFileSize + ")");
+			fileTransferring = true;
+
 		});
 
 		function startSignaling() {
-			displaySignalMessage("starting signaling...");
+			console.log("starting signaling...");
 			rtcPeerConn = new webkitRTCPeerConnection(configuration, null);
 			dataChannel = rtcPeerConn.createDataChannel('textMessages', dataChannelOptions);
 			
@@ -149,18 +189,18 @@
 			rtcPeerConn.onicecandidate = function (evt) {
 				if (evt.candidate)
 					io.emit('signal',{"type":"ice candidate", "message": JSON.stringify({ 'candidate': evt.candidate }), "room":SIGNAL_ROOM});
-				displaySignalMessage("completed that ice candidate...");
+				console.log("completed that ice candidate...");
 			};
 			
 			// let the 'negotiationneeded' event trigger offer generation
 			rtcPeerConn.onnegotiationneeded = function () {
-				displaySignalMessage("on negotiation called");
+				console.log("on negotiation called");
 				rtcPeerConn.createOffer(sendLocalDesc, logError);
 			}
 		
 			// once remote stream arrives, show it in the remote video element
 			rtcPeerConn.onaddstream = function (evt) {
-				displaySignalMessage("going to add their stream...");
+				console.log("going to add their stream...");
 				theirVideoArea.src = URL.createObjectURL(evt.stream);
 			};
 
@@ -177,7 +217,7 @@
 					}
 				}
 			}, function (stream) {
-				displaySignalMessage("going to display my stream...");
+				console.log("going to display my stream...");
 				myVideoArea.src = URL.createObjectURL(stream);
 				rtcPeerConn.addStream(stream);
 			}, logError);
@@ -186,22 +226,30 @@
 
 		function dataChannelStateChanged() {
 			if (dataChannel.readyState === 'open') {
-				displaySignalMessage("Data Channel open");
+				console.log("Data Channel open");
 				dataChannel.onmessage = receiveDataChannelMessage;
 			}
 		}
 
 		function receiveDataChannel(event) {
-			displaySignalMessage("Receiving a data channel");
+			console.log("Receiving a data channel");
 			dataChannel = event.channel;
 			dataChannel.onmessage = receiveDataChannelMessage;
 		}
 
+		function appendChatMessage(msg, className) {
+			var div = document.createElement('div');
+			div.className = className;
+			div.innerHTML = '<span>' + msg + '</span>';
+			messageHolder.appendChild(div);
+		}
+
 		function receiveDataChannelMessage(event) {
-			displaySignalMessage("Incoming Message");
-			displayMessage("From DataChannel: " + event.data);
+			console.log("Incoming Message");
+			console.log("From DataChannel: " + event.data);
 				
 			//This is where we process incoming files
+			if(fileTransferring){
 			fileBuffer.push(event.data);
 			fileSize += event.data.byteLength;
 			fileProgress.value = fileSize;
@@ -210,23 +258,40 @@
 			if (fileSize === receivedFileSize) {
 				var received = new window.Blob(fileBuffer);
 				fileBuffer = [];
-
 				downloadLink.href = URL.createObjectURL(received);
 				downloadLink.download = receivedFileName;
 				downloadLink.appendChild(document.createTextNode(receivedFileName + "(" + fileSize + ") bytes"));
-			}
+				console.log(downloadLink + "from receiveDataChannel");
+				fileTransferring = false;
+				//Also put the file in the text chat area
+				var linkTag = document.createElement('a');
+				linkTag.href = URL.createObjectURL(received);
+				linkTag.download = receivedFileName;
+				linkTag.appendChild(document.createTextNode(receivedFileName));
 
+				var div = document.createElement('div');
+				div.className = 'message-out';
+				div.appendChild(linkTag);
+				console.log(typeof linkTag);
+				messageHolder.appendChild(div);
+				fileSize = 0;			
+			}
 		}
+		else {
+			appendChatMessage(event.data, 'message-out');
+		}
+		}
+
 
 		function sendLocalDesc(desc) {
 			rtcPeerConn.setLocalDescription(desc, function () {
-				displaySignalMessage("sending local description");
+				console.log("sending local description");
 				io.emit('signal',{"type":"SDP", "message": JSON.stringify({ 'sdp': rtcPeerConn.localDescription }), "room":SIGNAL_ROOM});
 			}, logError);
 		}
 
 		function logError(error) {
-			displaySignalMessage(error.name + ': ' + error.message);
+			console.log(error.name + ': ' + error.message);
 		}
 
 		io.on('announce', function(data){
@@ -246,16 +311,22 @@
 		}
 		
 		sendMessage.addEventListener('click', function(ev){
+			appendChatMessage(myMessage.value, 'message-in');
 			io.emit('send', {"author":myName.value, "message":myMessage.value, "room":ROOM});
+		    document.getElementById("textChat").reset();
 			// dataChannel.send(myName.value + " says " + myMessage.value);
+			
 			ev.preventDefault();
 		}, false);
 
 		sendFile.addEventListener('change', function(ev){
 			var file = sendFile.files[0];
-			displaySignalMessage("sending file " + file.name + " (" + file.size + ") ...");
+			console.log("sending file " + file.name + " (" + file.size + ") ...");
 			io.emit('files',{"filename":file.name, "filesize":file.size, "room":FILES_ROOM});
-			
+
+			appendChatMessage("sending " + file.name, 'message-in');
+			fileTransferring = true;
+
 			fileProgress.max = file.size;
 			var chunkSize = 16384;
 			var sliceFile = function(offset) {
@@ -272,15 +343,31 @@
 				var slice = file.slice(offset, offset + chunkSize);
 				reader.readAsArrayBuffer(slice);
 			};
-			sliceFile(0);		
+			sliceFile(0);
+			fileTransferring = false;		
 		
 		}, false);
 
 
 	</script>
-	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<!-- 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous"></script> -->
+
+<!-- JQuery -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- Bootstrap tooltips -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js"></script>
+<!-- Bootstrap core JavaScript -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<!-- MDB core JavaScript -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/js/mdb.min.js"></script>
+     
+
 
 </body>
 </html>

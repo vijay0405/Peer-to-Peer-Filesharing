@@ -1,6 +1,24 @@
 .titleHeader {
 	font-family: 'Josefin Sans', sans-serif;
-	padding: 10px;
+	padding: 20px;
 	margin-left: 20%;
 	color: #404040;
+}
+
+$height-footer: 60px;
+
+html {
+  min-height: 100%;
+  position: relative;
+  body {
+    margin-bottom: $height-footer;
+  }
+}
+
+progress {
+    width: calc(100% - 8.5em);
+}
+
+page-footer {
+	
 }
