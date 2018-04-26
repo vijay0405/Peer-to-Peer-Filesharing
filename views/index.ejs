@@ -37,46 +37,39 @@
                     </div>
 
 
-
-
-	<div class="row">
-    <div class="col-sm-8" style="text-align: center;">
+    <div style="text-align: center;">
 	<div style="margin: auto;">
 		<input type="file" id="sendFile"/><br/>
 		<progress id="fileProgress" value=“1” max="100"></progress>
-		<a id="receivedFileLink"></a>
+		<a hidden id="receivedFileLink"></a>
 	</div> 
 
-<!-- 	<div>
-		<video id="myVideoTag" autoplay></video>
-		<video id="theirVideoTag" autoplay></video>
-	</div>   -->
 
 
-
-</div>
-    <div class="col-sm-4">
-    	<header>Text Chat</header>
-<form id="textChat">
-    <input type="text" class="form-control" id="myName" placeholder="Name">
-    <input type="text" class="form-control" id="myMessage" placeholder="message">
-	  <button id="sendMessage" type="submit" class="btn btn-primary">send</button>
-</form>    
-<div id="chatArea">Message Output:</br></div>
-</div>
-</div>
+	</div>
         
-        <div class="well">
-  	File Status:
-          <div id="messageHolder" class="message-holder">
+        <div>
+        	<h2>Files Sent/Received: </h2>
+          <div id="messageHolder" class="message-holder jumbotron jumbotron-fluid container">
 			<div id="messageInName" class="message-in"></div>
 			<div id="messageOutName" class="message-out"></div>
           </div>
         </div>
-
-
-
-
+	<div class="row">
+	    <div class="col-sm-6">
+	    	<header>Text Chat</header>
+		<form id="textChat" class="form-inline">
+		    <input type="text" class="form-control" id="myName" placeholder="Name">
+		    <input type="text" class="form-control" id="myMessage" placeholder="message">
+			  <button id="sendMessage" type="submit" class="btn btn-primary">send</button>
+		</form>    
+		<div id="chatArea">Message Output:</br></div>
+		</div>
+		<div class="col-sm-6">
+			<video id="myVideoTag" autoplay></video>
+			<video id="theirVideoTag" autoplay></video>
+		</div>  
+	</div>
 
 
 	<!-- <div> -->

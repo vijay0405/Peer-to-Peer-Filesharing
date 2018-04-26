@@ -19,6 +19,34 @@ progress {
     width: calc(100% - 8.5em);
 }
 
-page-footer {
-	
+/*Messages Box*/
+.message-holder{
+  display: inline-block;
+  width: 508px;
+  padding: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  height: 320px;
+  overflow-x: scroll;
+}
+.message-holder .message-in,
+.message-holder .message-out{
+  display: block;
+  text-align: left;
+} 
+.message-holder .message-in span,
+.message-holder .message-out span{
+  display: inline-block;
+  padding: 6px 8px;
+  margin: 4px 0;
+  width: 80%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  line-height: 14px;
+}
+.message-holder .message-in span a,
+.message-holder .message-out span a{
+  color:#A5F008;
+}
+.message-holder .message-out{
+  text-align: right;
 }
