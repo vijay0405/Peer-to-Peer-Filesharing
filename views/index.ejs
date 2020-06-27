@@ -214,7 +214,7 @@
 					}
 				}
 			}, function (stream) {
-				console.log("going to display my stream...");
+				console.log("going to display my stream..." + stream);
 				myVideoArea.src = URL.createObjectURL(stream);
 				rtcPeerConn.addStream(stream);
 			}, logError);
